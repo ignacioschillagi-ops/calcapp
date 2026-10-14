@@ -860,7 +860,6 @@
     if (k === 'home') window.scrollTo({ top: 0, behavior: 'smooth' });
     else if (k === 'new') newDrawing();
     else if (k === 'trace') { if (S.src) goTrace(); else openPicker(); }
-    else if (k === 'help') openHelpModal();
   }));
 
   /* =========================================================
