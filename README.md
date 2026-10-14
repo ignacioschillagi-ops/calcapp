@@ -15,8 +15,9 @@ Calcá cualquier imagen sobre papel usando la cámara del celular. Cargás una f
 - Linterna, solo en Android/Chrome. Safari en iPhone no la permite.
 - Grilla, espejar, centrar y cambiar de cámara.
 - **Sin cámara:** fondo blanco para calcar apoyando una hoja finita sobre la pantalla.
-- Recuerda la última imagen y los ajustes.
-- Se puede instalar como app (PWA) y funciona sin internet.
+- **Nuevo dibujo:** si ya estás calcando algo, primero pregunta. La imagen actual solo se reemplaza cuando elegís otra.
+- **Tu dibujo queda guardado:** si cerrás la app, al reabrirla volvés directo a Calcar con la misma imagen, posición, opacidad y modo.
+- Se puede instalar como app (PWA) y funciona sin internet. El botón «Instalar» solo aparece en la web: en la app instalada no se ve.
 
 No usa servidor, base de datos ni API keys: todo corre en el teléfono y las imágenes nunca salen del dispositivo.
 
@@ -30,6 +31,7 @@ sw.js                 service worker (offline)
 manifest.webmanifest  datos para instalar la app
 vercel.json           headers (permiso de cámara, caché del SW)
 icons/                ícono en SVG y PNG
+fonts/                tipografía Fredoka (licencia OFL, incluida)
 ```
 
 ## Subirla a GitHub + Vercel
@@ -62,4 +64,4 @@ En la compu la rueda del mouse hace zoom y Shift + rueda rota la imagen.
 
 ## Actualizaciones
 
-Cuando subas cambios grandes, cambiá `VERSION` en `sw.js` (por ejemplo `calcapp-v2`). Así los celulares que la tienen instalada borran la versión vieja guardada.
+Cuando subas cambios grandes, cambiá `VERSION` en `sw.js` (por ejemplo `calcapp-v3`). Así los celulares que la tienen instalada borran la versión vieja guardada.

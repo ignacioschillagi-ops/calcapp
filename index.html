@@ -5,10 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Calcapp — Calcá cualquier imagen con la cámara</title>
   <meta name="description" content="Calcá cualquier imagen sobre papel usando la cámara de tu celular. Gratis, sin registro y sin instalar nada.">
-  <meta name="theme-color" content="#111210">
+  <meta name="theme-color" content="#F2FBF8">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Calcapp">
   <meta property="og:title" content="Calcapp — Calcá cualquier imagen con la cámara">
   <meta property="og:description" content="Cargá una imagen, bajale la opacidad y dibujala sobre papel mirando la cámara de tu celular.">
@@ -16,14 +16,28 @@
   <link rel="icon" type="image/svg+xml" href="/icons/icon.svg">
   <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
   <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="preload" href="/fonts/fredoka.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/styles.css">
+  <script>
+    // Marcar si corre como app instalada antes de pintar (así el botón Instalar no "parpadea")
+    (function () {
+      var sa = (window.matchMedia && (matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: fullscreen)').matches || matchMedia('(display-mode: minimal-ui)').matches)) || navigator.standalone === true;
+      var inst = false; try { inst = localStorage.getItem('calcapp:installed') === 'true'; } catch (e) {}
+      if (sa) document.documentElement.classList.add('is-app');
+      if (inst) document.documentElement.classList.add('is-installed');
+    })();
+  </script>
 </head>
 <body>
 
 <!-- ===== Pantalla de carga ===== -->
 <div id="splash" aria-hidden="true">
-  <img class="splash-icon" src="/icons/icon.svg" alt="">
-  <div class="wordmark splash-wordmark">CALC<span>APP</span></div>
+  <div class="splash-bubble">
+    <img class="splash-icon" src="/icons/icon.svg" alt="">
+    <span class="spark s1"></span><span class="spark s2"></span><span class="spark s3"></span>
+  </div>
+  <div class="wordmark splash-wordmark">Calc<span>app</span></div>
+  <div class="splash-tag">¡A calcar se ha dicho!</div>
   <div class="splash-by">
     <svg viewBox="0 0 1111.08 1111.08" class="yosoyjoe-mark" aria-hidden="true"><path d="M745.86,365.22c-103.19-103.19-150.06-227.68-115.82-295.39,7.24-14.32,6.31-30.16-3.46-39.93l-1.74-1.74c-12.69-12.69-35.15-10.8-50.18,4.22L32.39,574.66c-15.02,15.02-16.91,37.49-4.22,50.18l1.74,1.74c9.77,9.77,25.61,10.7,39.93,3.46,67.71-34.24,192.2,12.63,295.39,115.82,103.19,103.19,150.06,227.68,115.82,295.39-7.24,14.32-6.31,30.16,3.46,39.93l1.74,1.74c12.69,12.69,35.15,10.8,50.18-4.22l542.27-542.27c15.02-15.02,16.91-37.49,4.22-50.18l-1.74-1.74c-9.77-9.77-25.61-10.7-39.93-3.46-67.71,34.24-192.2-12.63-295.39-115.82ZM764.1,764.1c-59.66,59.66-201.39,14.64-316.58-100.54-115.18-115.18-160.2-256.92-100.54-316.58,59.66-59.66,201.39-14.64,316.58,100.54,115.18,115.18,160.2,256.92,100.54,316.58Z"/><ellipse cx="823.01" cy="288.06" rx="43.65" ry="36.87" transform="translate(37.36 666.33) rotate(-45)"/></svg>
     <span>by <strong>@YoSoyJoe</strong></span>
@@ -33,62 +47,119 @@
 <!-- ===== Inicio ===== -->
 <main id="home" class="screen">
   <header class="topbar">
-    <button class="icon-btn" id="btn-install" aria-label="Instalar en tu celular" title="Instalar en tu celular">
-      <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-    </button>
-    <a class="wordmark" href="#/" aria-label="Calcapp, inicio">CALC<span>APP</span></a>
-    <button class="icon-btn" id="btn-help-top" aria-label="Cómo se usa" title="Cómo se usa">
-      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-    </button>
+    <a class="brand" href="#/" aria-label="Calcapp, inicio">
+      <img src="/icons/icon.svg" alt="" width="38" height="38">
+      <span class="wordmark">Calc<span>app</span></span>
+    </a>
+    <div class="topbar-actions">
+      <button class="pill-btn web-only" id="btn-install" aria-label="Instalar en tu celular">
+        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Instalar
+      </button>
+      <button class="round-btn" id="btn-help-top" aria-label="Cómo se usa">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      </button>
+    </div>
   </header>
 
-  <section class="hero">
-    <img class="hero-icon" src="/icons/icon.svg" alt="" width="96" height="96">
-    <h1>¡Bienvenido/a a <span class="accent">Calcapp</span>!</h1>
-    <p class="lead">Calcá cualquier imagen sobre papel usando la cámara de tu celular: cargá una foto, bajale la opacidad y dibujá siguiendo las líneas que ves en la pantalla.</p>
+  <section class="hero card">
+    <div class="hero-art" aria-hidden="true">
+      <!-- Ilustración: celular apoyado en un vaso, apuntando al papel -->
+      <svg viewBox="0 0 320 170" class="illus">
+        <circle cx="40" cy="34" r="5" class="i-spark"/><circle cx="292" cy="26" r="4" class="i-spark"/><circle cx="270" cy="62" r="3" class="i-spark"/>
+        <path d="M60 22 l3 7 7 3 -7 3 -3 7 -3 -7 -7 -3 7 -3z" class="i-star"/>
+        <line x1="10" y1="152" x2="310" y2="152" class="i-table"/>
+        <!-- vaso -->
+        <path d="M46 108 h48 l-3.5 42 h-41 z" class="i-water"/>
+        <path d="M44 82 h52 l-6 70 h-40 z" class="i-glass"/>
+        <path d="M44 108 q13 -5 26 0 t26 0" class="i-wave"/>
+        <path d="M54 92 v10 M54 116 v26" class="i-glass-shine"/>
+        <!-- celular -->
+        <rect x="30" y="64" width="190" height="18" rx="7" class="i-phone"/>
+        <circle cx="196" cy="82" r="3.5" class="i-cam"/>
+        <!-- cono de visión -->
+        <path d="M196 84 L150 148 M196 84 L262 148" class="i-view"/>
+        <!-- papel -->
+        <path d="M128 146 h150 l8 6 h-166 z" class="i-paper"/>
+        <!-- lápiz -->
+        <g transform="translate(226 144) rotate(-62)">
+          <rect x="10" y="-6" width="52" height="12" rx="2" class="i-pencil"/>
+          <polygon points="0,0 10,-6 10,6" class="i-tip"/>
+          <rect x="62" y="-6" width="10" height="12" rx="3" class="i-eraser"/>
+        </g>
+      </svg>
+    </div>
+    <h1>¡Calcá lo que <span class="hl">quieras</span>!</h1>
+    <p class="lead">Cargá una foto, bajale la opacidad y dibujala en el papel siguiendo lo que ves por la cámara de tu celular.</p>
   </section>
 
-  <section class="features">
-    <div class="feature">Cargá una imagen de tu galería o sacale una foto a lo que quieras dibujar.</div>
-    <div class="feature">Ajustá opacidad, tamaño, posición y rotación con los dedos, y bloqueala para que no se mueva.</div>
-    <div class="feature"><strong>Modo boceto:</strong> convierte la foto en líneas para que sea mucho más fácil de calcar.</div>
+  <section class="tiles" aria-label="Qué podés hacer">
+    <div class="tile t-aqua">
+      <span class="bubble"><svg viewBox="0 0 24 24"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg></span>
+      Mirá por la cámara
+    </div>
+    <div class="tile t-lilac">
+      <span class="bubble"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/></svg></span>
+      Bajá la opacidad
+    </div>
+    <div class="tile t-coral">
+      <span class="bubble"><svg viewBox="0 0 24 24"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg></span>
+      Pasala a boceto
+    </div>
+  </section>
+
+  <section class="continue card" id="continue" hidden>
+    <canvas id="thumb" width="120" height="120" aria-hidden="true"></canvas>
+    <div class="continue-text">
+      <strong>Tu dibujo te espera</strong>
+      <span>Quedó guardado tal cual lo dejaste.</span>
+      <button class="btn btn-primary btn-sm" id="btn-resume">
+        <svg viewBox="0 0 24 24"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+        Seguir calcando
+      </button>
+    </div>
   </section>
 
   <section class="cta">
-    <button class="btn btn-primary" id="btn-pick">
-      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg>
-      Elegir imagen
+    <button class="btn btn-primary btn-big" id="btn-new">
+      <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+      Nuevo dibujo
     </button>
-    <button class="btn btn-ghost" id="btn-resume" hidden>Seguir con la última imagen</button>
-    <button class="btn btn-ghost" id="btn-sample">Probar con un dibujo de ejemplo</button>
+    <button class="btn btn-link" id="btn-sample">
+      <svg viewBox="0 0 24 24"><path d="m12 3 2.6 5.6 6.1.7-4.5 4.2 1.2 6L12 16.6 6.6 19.5l1.2-6L3.3 9.3l6.1-.7z"/></svg>
+      Probar con un dibujo de ejemplo
+    </button>
   </section>
 
-  <section class="howto" id="howto">
+  <section class="howto card" id="howto">
     <h2>¿Cómo se usa?</h2>
     <ol class="steps">
-      <li><strong>Apoyá el celular</strong> sobre un vaso, una pila de libros o un trípode, a unos 20–30 cm del papel, con la cámara mirando hacia abajo.</li>
-      <li><strong>Cargá tu imagen</strong> y acomodala con los dedos: arrastrá para moverla, pellizcá para agrandarla y girá con dos dedos.</li>
-      <li><strong>Bajale la opacidad</strong> hasta que veas bien el papel y tu lápiz a través de la imagen.</li>
-      <li><strong>Tocá «Bloquear»</strong> para que nada se mueva, y dibujá en el papel mirando la pantalla.</li>
+      <li><span class="num n1">1</span><div><strong>Apoyá el celular</strong> sobre un vaso, una pila de libros o un trípode, a unos 20–30 cm del papel.</div></li>
+      <li><span class="num n2">2</span><div><strong>Elegí tu imagen</strong> y acomodala: arrastrá para moverla, pellizcá para agrandarla y girala con dos dedos.</div></li>
+      <li><span class="num n3">3</span><div><strong>Bajale la opacidad</strong> hasta ver bien el papel y la punta de tu lápiz.</div></li>
+      <li><span class="num n4">4</span><div><strong>Tocá «Bloquear»</strong> y dibujá en el papel mirando la pantalla.</div></li>
     </ol>
-    <p class="hint">Tip: el celular tiene que quedar <strong>quieto</strong>. Si se mueve, la imagen se corre respecto del papel.</p>
+    <p class="tip"><strong>Tip:</strong> el celular tiene que quedar <strong>quieto</strong>. Si se mueve, la imagen se corre del papel.</p>
   </section>
 
-  <footer class="hint by">By <a href="https://yosoyjoe.vercel.app/" target="_blank" rel="noopener noreferrer">@YoSoyJoe</a></footer>
+  <footer class="by">
+    <svg viewBox="0 0 1111.08 1111.08" class="yosoyjoe-mark" aria-hidden="true"><use href="#yj"/></svg>
+    By <a href="https://yosoyjoe.vercel.app/" target="_blank" rel="noopener noreferrer">@YoSoyJoe</a>
+  </footer>
 
   <nav class="bottom-nav" aria-label="Navegación">
     <div class="bottom-nav-inner">
       <button class="active" data-nav="home">
-        <svg viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Inicio
+        <svg viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg><span>Inicio</span>
       </button>
-      <button data-nav="pick">
-        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg>Imagen
+      <button data-nav="new">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M12 8v8M8 12h8"/></svg><span>Nuevo dibujo</span>
       </button>
       <button data-nav="trace">
-        <svg viewBox="0 0 24 24"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>Calcar
+        <svg viewBox="0 0 24 24"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg><span>Calcar</span>
       </button>
       <button data-nav="help">
-        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Ayuda
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span>Ayuda</span>
       </button>
     </div>
   </nav>
@@ -104,7 +175,7 @@
   <div id="grid" hidden></div>
 
   <div id="cam-error" class="cam-error" hidden>
-    <svg viewBox="0 0 24 24" class="big-icon"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/><line x1="2" y1="2" x2="22" y2="22"/></svg>
+    <span class="bubble big"><svg viewBox="0 0 24 24"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/><line x1="2" y1="2" x2="22" y2="22"/></svg></span>
     <h3>No pudimos abrir la cámara</h3>
     <p id="cam-error-msg">Revisá que le hayas dado permiso al navegador para usar la cámara.</p>
     <div class="row">
@@ -114,48 +185,52 @@
   </div>
 
   <div class="trace-top ui">
-    <button class="icon-btn glass" id="btn-back" aria-label="Volver al inicio">
+    <button class="round-btn" id="btn-back" aria-label="Volver al inicio">
       <svg viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
     </button>
-    <span class="wordmark small">CALC<span>APP</span></span>
+    <span class="brand-chip"><img src="/icons/icon.svg" alt="" width="22" height="22"><span class="wordmark small">Calc<span>app</span></span></span>
     <div class="top-right">
-      <button class="icon-btn glass" id="btn-torch" aria-label="Linterna" title="Linterna" hidden>
+      <button class="round-btn" id="btn-torch" aria-label="Linterna" title="Linterna" hidden>
         <svg viewBox="0 0 24 24"><path d="M18 6c0 2-2 2-2 4v10a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2V10c0-2-2-2-2-4V2h12z"/><line x1="6" y1="6" x2="18" y2="6"/><line x1="12" y1="12" x2="12" y2="12"/></svg>
       </button>
     </div>
   </div>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
-  <div id="busy" class="busy" hidden><span class="spinner"></span>Generando boceto…</div>
+  <div id="busy" class="busy" hidden><span class="spinner"></span>Dibujando el boceto…</div>
 
   <div class="trace-bottom ui">
-    <div class="opacity-row glass">
-      <svg viewBox="0 0 24 24" class="op-icon"><circle cx="12" cy="12" r="9" stroke-dasharray="2 3"/></svg>
+    <div class="opacity-row">
+      <span class="op-label">Opacidad</span>
       <input type="range" id="opacity" min="0" max="100" value="50" aria-label="Opacidad de la imagen">
       <output id="opacity-val">50%</output>
     </div>
-    <nav class="bottom-nav dock" aria-label="Herramientas">
-      <div class="bottom-nav-inner">
-        <button id="tool-image">
-          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg>Imagen
-        </button>
-        <button id="tool-sketch" aria-pressed="false">
-          <svg viewBox="0 0 24 24"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>Boceto
-        </button>
-        <button id="tool-more">
-          <svg viewBox="0 0 24 24"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg>Ajustes
-        </button>
-        <button id="tool-lock">
-          <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Bloquear
-        </button>
-      </div>
+    <nav class="dock" aria-label="Herramientas">
+      <button id="tool-new">
+        <span class="bubble b-aqua"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M12 8v8M8 12h8"/></svg></span>
+        <span>Nuevo dibujo</span>
+      </button>
+      <button id="tool-sketch" aria-pressed="false">
+        <span class="bubble b-lilac"><svg viewBox="0 0 24 24"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg></span>
+        <span>Boceto</span>
+      </button>
+      <button id="tool-more">
+        <span class="bubble b-sky"><svg viewBox="0 0 24 24"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg></span>
+        <span>Ajustes</span>
+      </button>
+      <button id="tool-lock">
+        <span class="bubble b-coral"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
+        <span>Bloquear</span>
+      </button>
     </nav>
   </div>
 
   <!-- Indicador de bloqueo -->
   <button id="unlock" class="unlock" hidden aria-label="Mantené apretado para desbloquear">
-    <svg class="ring" viewBox="0 0 48 48"><circle cx="24" cy="24" r="21"/></svg>
-    <svg viewBox="0 0 24 24" class="lock-ico"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    <span class="unlock-icon">
+      <svg class="ring" viewBox="0 0 48 48"><circle cx="24" cy="24" r="21"/></svg>
+      <svg viewBox="0 0 24 24" class="lock-ico"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    </span>
     <span>Mantené para desbloquear</span>
   </button>
 
@@ -164,7 +239,7 @@
     <div class="sheet-card">
       <div class="sheet-head">
         <h3>Ajustes</h3>
-        <button class="icon-btn" id="sheet-close" aria-label="Cerrar"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+        <button class="round-btn" id="sheet-close" aria-label="Cerrar"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
       </div>
 
       <div class="sheet-grid">
@@ -184,7 +259,7 @@
           <svg viewBox="0 0 24 24"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/><line x1="2" y1="2" x2="22" y2="22"/></svg>Sin cámara
         </button>
         <button class="chip" id="opt-switch" hidden>
-          <svg viewBox="0 0 24 24"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><path d="M9 13h6M13 11l2 2-2 2"/></svg>Cambiar cámara
+          <svg viewBox="0 0 24 24"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><path d="M9 13h6M13 11l2 2-2 2"/></svg>Otra cámara
         </button>
       </div>
 
@@ -199,8 +274,8 @@
         <div class="swatches" role="radiogroup" aria-label="Color de la línea">
           <span class="muted">Color:</span>
           <button class="swatch" data-color="#111111" style="--c:#111111" aria-label="Negro" aria-checked="true" role="radio"></button>
-          <button class="swatch" data-color="#d62828" style="--c:#d62828" aria-label="Rojo" aria-checked="false" role="radio"></button>
-          <button class="swatch" data-color="#1d4ed8" style="--c:#1d4ed8" aria-label="Azul" aria-checked="false" role="radio"></button>
+          <button class="swatch" data-color="#e2453c" style="--c:#e2453c" aria-label="Rojo" aria-checked="false" role="radio"></button>
+          <button class="swatch" data-color="#2563eb" style="--c:#2563eb" aria-label="Azul" aria-checked="false" role="radio"></button>
           <button class="swatch" data-color="#ffffff" style="--c:#ffffff" aria-label="Blanco" aria-checked="false" role="radio"></button>
         </div>
         <p class="hint">Tip: usá rojo o azul para distinguir la guía de lo que vas dibujando con el lápiz.</p>
@@ -208,6 +283,11 @@
     </div>
   </div>
 </section>
+
+<!-- símbolo reutilizable del isotipo YoSoyJoe -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="yj" viewBox="0 0 1111.08 1111.08"><path d="M745.86,365.22c-103.19-103.19-150.06-227.68-115.82-295.39,7.24-14.32,6.31-30.16-3.46-39.93l-1.74-1.74c-12.69-12.69-35.15-10.8-50.18,4.22L32.39,574.66c-15.02,15.02-16.91,37.49-4.22,50.18l1.74,1.74c9.77,9.77,25.61,10.7,39.93,3.46,67.71-34.24,192.2,12.63,295.39,115.82,103.19,103.19,150.06,227.68,115.82,295.39-7.24,14.32-6.31,30.16,3.46,39.93l1.74,1.74c12.69,12.69,35.15,10.8,50.18-4.22l542.27-542.27c15.02-15.02,16.91-37.49,4.22-50.18l-1.74-1.74c-9.77-9.77-25.61-10.7-39.93-3.46-67.71,34.24-192.2-12.63-295.39-115.82ZM764.1,764.1c-59.66,59.66-201.39,14.64-316.58-100.54-115.18-115.18-160.2-256.92-100.54-316.58,59.66-59.66,201.39-14.64,316.58,100.54,115.18,115.18,160.2,256.92,100.54,316.58Z"/><ellipse cx="823.01" cy="288.06" rx="43.65" ry="36.87" transform="translate(37.36 666.33) rotate(-45)"/></symbol>
+</svg>
 
 <input type="file" id="file" accept="image/*" hidden>
 <div id="modal-root"></div>

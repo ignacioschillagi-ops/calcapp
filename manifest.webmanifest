@@ -1,4 +1,5 @@
 {
+  "id": "/",
   "name": "Calcapp — Calcá con la cámara",
   "short_name": "Calcapp",
   "description": "Calcá cualquier imagen sobre papel usando la cámara de tu celular. By @YoSoyJoe.",
@@ -7,13 +8,43 @@
   "scope": "/",
   "display": "standalone",
   "orientation": "any",
-  "background_color": "#111210",
-  "theme_color": "#111210",
-  "categories": ["art", "education", "utilities"],
+  "background_color": "#F2FBF8",
+  "theme_color": "#8EE3D3",
+  "categories": [
+    "art",
+    "education",
+    "utilities"
+  ],
   "icons": [
-    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
-    { "src": "/icons/icon.svg", "sizes": "any", "type": "image/svg+xml" }
-  ]
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ],
+  "related_applications": [
+    {
+      "platform": "webapp",
+      "url": "/manifest.webmanifest"
+    }
+  ],
+  "prefer_related_applications": false
 }

@@ -81,7 +81,7 @@
     camError: $('#cam-error'), camErrorMsg: $('#cam-error-msg'),
     opacity: $('#opacity'), opacityVal: $('#opacity-val'),
     toast: $('#toast'), busy: $('#busy'), sheet: $('#sheet'), unlock: $('#unlock'),
-    torch: $('#btn-torch'), resume: $('#btn-resume'), modalRoot: $('#modal-root'),
+    torch: $('#btn-torch'), continueCard: $('#continue'), thumb: $('#thumb'), modalRoot: $('#modal-root'),
     themeMeta: document.querySelector('meta[name="theme-color"]'),
   };
   const octx = el.overlay.getContext('2d');
@@ -136,6 +136,24 @@
     return c;
   }
 
+  // Pedimos al navegador que no borre lo guardado (sobre todo en iPhone)
+  let persistAsked = false;
+  function askPersistentStorage() {
+    if (persistAsked) return;
+    persistAsked = true;
+    try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {}); } catch { /* noop */ }
+  }
+
+  function saveCurrentImage(type) {
+    return new Promise((res) => {
+      if (!S.src) return res();
+      S.src.toBlob(async (b) => {
+        if (b) { await idb.set('last', b); askPersistentStorage(); }
+        res();
+      }, type, 0.9);
+    });
+  }
+
   async function setImageFromBlob(blob, { save = true, keepTransform = false } = {}) {
     const img = await blobToImage(blob);
     S.src = imageToCanvas(img);
@@ -143,9 +161,24 @@
     if (!keepTransform) { S.t = { x: 0, y: 0, s: 1, r: 0 }; prefs.set('t', S.t); }
     if (save) {
       const keepsAlpha = /png|gif|webp|svg/i.test(blob.type || '');
-      S.src.toBlob((b) => { if (b) idb.set('last', b); }, keepsAlpha ? 'image/png' : 'image/jpeg', 0.9);
+      await saveCurrentImage(keepsAlpha ? 'image/png' : 'image/jpeg');
     }
-    el.resume.hidden = false;
+    updateContinueCard();
+  }
+
+  /* Miniatura del dibujo guardado en Inicio */
+  function updateContinueCard() {
+    el.continueCard.hidden = !S.src;
+    if (!S.src) return;
+    drawThumb(el.thumb, S.src);
+  }
+  function drawThumb(canvas, src) {
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+    ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, W, H);
+    const k = Math.min(W / src.width, H / src.height) * 0.92;
+    const w = src.width * k, h = src.height * k;
+    ctx.drawImage(src, (W - w) / 2, (H - h) / 2, w, h);
   }
 
   function openPicker() {
@@ -153,12 +186,37 @@
     el.file.click();
   }
 
+  /* ---------- Nuevo dibujo (pregunta si ya hay uno en curso) ---------- */
+  function confirmReplace({ title, text, yes, onYes }) {
+    if (!S.src) { onYes(); return; }
+    const m = openModal(`
+      <canvas class="confirm-thumb" width="192" height="192"></canvas>
+      <h3>${title}</h3>
+      <p>${text}</p>
+      <div class="actions">
+        <button class="btn btn-primary" data-act="yes">${yes}</button>
+        <button class="btn btn-ghost" data-act="no">No, seguir calcando</button>
+      </div>`, { center: true });
+    drawThumb(m.root.querySelector('.confirm-thumb'), S.src);
+    m.root.querySelector('[data-act="yes"]').addEventListener('click', () => { m.close(); onYes(); });
+    m.root.querySelector('[data-act="no"]').addEventListener('click', m.close);
+  }
+
+  function newDrawing() {
+    confirmReplace({
+      title: '¿Empezamos un dibujo nuevo?',
+      text: 'La imagen que estás calcando se va a borrar cuando elijas la nueva. Si cancelás, queda como está.',
+      yes: 'Sí, nuevo dibujo',
+      onYes: openPicker, // se llama dentro del toque, así el navegador deja abrir la galería
+    });
+  }
+
   el.file.addEventListener('change', async () => {
     const f = el.file.files && el.file.files[0];
     if (!f) return;
     try {
       await setImageFromBlob(f);
-      if (route() === 'trace') { await refreshOverlay(); toast('Imagen cargada'); }
+      if (route() === 'trace') { await refreshOverlay(); toast('¡Listo! Nuevo dibujo cargado'); }
       else goTrace();
     } catch (e) {
       alertModal('No pudimos abrir esa imagen', 'Probá con otra foto (JPG o PNG).');
@@ -185,9 +243,17 @@
   async function loadSample() {
     try {
       const blob = new Blob([SAMPLE_SVG], { type: 'image/svg+xml' });
-      await setImageFromBlob(blob, { save: false });
+      await setImageFromBlob(blob);
       goTrace();
     } catch { toast('No se pudo cargar el ejemplo'); }
+  }
+  function askSample() {
+    confirmReplace({
+      title: '¿Probamos con el ejemplo?',
+      text: 'La imagen que estás calcando se va a reemplazar por el dibujo de ejemplo.',
+      yes: 'Sí, usar el ejemplo',
+      onYes: loadSample,
+    });
   }
 
   /* =========================================================
@@ -594,7 +660,7 @@
     prefs.set('opacity', S.opacity);
   });
 
-  $('#tool-image').addEventListener('click', openPicker);
+  $('#tool-new').addEventListener('click', newDrawing);
   $('#tool-sketch').addEventListener('click', async () => {
     S.mode = S.mode === 'sketch' ? 'photo' : 'sketch';
     prefs.set('mode', S.mode);
@@ -656,14 +722,31 @@
   /* =========================================================
      Modales (instalar / ayuda)
      ========================================================= */
+  /* ---------- Botón Instalar: solo en la web ---------- */
   let deferredInstall = null;
-  window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredInstall = e; });
+  const root = document.documentElement;
+  function isStandalone() {
+    return ['standalone', 'fullscreen', 'minimal-ui'].some((m) => window.matchMedia(`(display-mode: ${m})`).matches)
+      || navigator.standalone === true;
+  }
+  function markInstalled(on) {
+    prefs.set('installed', !!on);
+    root.classList.toggle('is-installed', !!on);
+  }
+  if (isStandalone()) { root.classList.add('is-app'); markInstalled(true); }
+  // Chrome solo ofrece instalar si NO está instalada → si aparece, mostramos el botón
+  window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredInstall = e; markInstalled(false); });
+  window.addEventListener('appinstalled', () => { deferredInstall = null; markInstalled(true); });
+  // Android/Chrome: detectar si la app ya está instalada aunque se abra desde el navegador
+  if (!isStandalone() && navigator.getInstalledRelatedApps) {
+    navigator.getInstalledRelatedApps().then((apps) => { if (apps && apps.length) markInstalled(true); }).catch(() => {});
+  }
 
-  function openModal(html) {
+  function openModal(html, { center = false } = {}) {
     el.modalRoot.innerHTML = `
       <div class="modal-backdrop" role="dialog" aria-modal="true">
-        <div class="modal">
-          <button class="icon-btn close" aria-label="Cerrar"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+        <div class="modal${center ? ' center' : ''}">
+          <button class="round-btn close" aria-label="Cerrar"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
           ${html}
         </div>
       </div>`;
@@ -679,11 +762,9 @@
   }
 
   function openInstallModal() {
-    const standalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
     const m = openModal(`
       <img class="modal-icon" src="/icons/icon.svg" alt="">
-      <h3>Instalarla en tu celular</h3>
-      ${standalone ? '<p><strong>¡Ya la tenés instalada!</strong> 🎉</p>' : ''}
+      <h3>Instalala en tu celular</h3>
       <p>La podés dejar como un ícono más en tu teléfono, sin abrir el navegador cada vez, y se abre en pantalla completa:</p>
       <p><strong>iPhone (Safari):</strong> tocá el botón de ⬆️ <strong>Compartir</strong> (abajo o arriba, según el modelo) y elegí <strong>"Agregar a pantalla de inicio"</strong>.</p>
       <p><strong>Android (Chrome):</strong> tocá los tres puntitos ⋮ de arriba a la derecha y elegí <strong>"Agregar a pantalla de inicio"</strong> o <strong>"Instalar app"</strong>.</p>
@@ -706,6 +787,7 @@
         <li><strong>Opacidad:</strong> bajala hasta ver bien el papel y la punta del lápiz.</li>
         <li><strong>Boceto:</strong> convierte la foto en líneas. En «Ajustes» cambiás intensidad, detalle y color.</li>
         <li><strong>Bloquear:</strong> esconde los controles y congela la imagen. Para desbloquear, mantené apretado el candado.</li>
+        <li><strong>Tu dibujo queda guardado:</strong> si cerrás la app, al volver a abrirla seguís donde estabas.</li>
       </ul>
       <h3>Si algo no anda</h3>
       <ul>
@@ -733,13 +815,16 @@
   }
 
   function showHome() {
+    prefs.set('lastRoute', 'home');
     stopCamera(); releaseWake(); unlock(); closeSheet();
+    updateContinueCard();
     el.trace.hidden = true; el.home.hidden = false;
     document.body.classList.remove('tracing');
-    el.themeMeta.setAttribute('content', '#111210');
+    el.themeMeta.setAttribute('content', '#F2FBF8');
   }
 
   async function showTrace() {
+    prefs.set('lastRoute', 'trace');
     el.home.hidden = true; el.trace.hidden = false;
     document.body.classList.add('tracing');
     el.themeMeta.setAttribute('content', '#000000');
@@ -765,15 +850,15 @@
   window.addEventListener('resize', () => { if (route() === 'trace') layoutOverlay(); });
 
   /* ---------- Botones de Inicio ---------- */
-  $('#btn-pick').addEventListener('click', openPicker);
-  $('#btn-sample').addEventListener('click', loadSample);
+  $('#btn-new').addEventListener('click', newDrawing);
+  $('#btn-sample').addEventListener('click', askSample);
   $('#btn-resume').addEventListener('click', () => { if (S.src) goTrace(); else openPicker(); });
   $('#btn-install').addEventListener('click', openInstallModal);
   $('#btn-help-top').addEventListener('click', openHelpModal);
   $$('[data-nav]').forEach((b) => b.addEventListener('click', () => {
     const k = b.dataset.nav;
     if (k === 'home') window.scrollTo({ top: 0, behavior: 'smooth' });
-    else if (k === 'pick') openPicker();
+    else if (k === 'new') newDrawing();
     else if (k === 'trace') { if (S.src) goTrace(); else openPicker(); }
     else if (k === 'help') openHelpModal();
   }));
@@ -786,6 +871,12 @@
       const last = await idb.get('last');
       if (last instanceof Blob) await setImageFromBlob(last, { save: false, keepTransform: true });
     } catch { /* sin imagen previa */ }
+    // Si cerraste la app mientras calcabas, volvés directo a tu dibujo
+    if (S.src && route() === 'home' && prefs.get('lastRoute', 'home') === 'trace') {
+      history.replaceState(null, '', '#/');
+      S.cameFromHome = true;
+      history.pushState(null, '', '#/calcar');
+    }
     onRoute();
     hideSplash();
   }
