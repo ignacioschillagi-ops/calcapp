@@ -32,7 +32,14 @@ manifest.webmanifest  datos para instalar la app
 vercel.json           headers (permiso de cámara, caché del SW)
 icons/                ícono en SVG y PNG
 fonts/                tipografía Fredoka (licencia OFL, incluida)
+img/                  foto de ejemplo para Ayuda (ver abajo)
 ```
+
+## Foto de ejemplo en Ayuda
+
+Poné tu foto de cómo se coloca el celular en `img/ayuda-celular.jpg` (también sirve `.png` o `.webp`). Aparece en la ventana de Ayuda, con un marco tipo polaroid. Mientras no haya foto, se muestra la ilustración del vaso.
+
+Recomendado: foto horizontal o cuadrada, de unos 1200 px de ancho y menos de 400 KB.
 
 ## Subirla a GitHub + Vercel
 

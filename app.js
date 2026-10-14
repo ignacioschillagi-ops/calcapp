@@ -777,10 +777,36 @@
     });
   }
 
+  /* Foto de ejemplo en Ayuda: poné tu imagen en /img/ayuda-celular.jpg (o .png / .webp).
+     Si no hay ninguna, se muestra la ilustración del vaso. */
+  const HELP_PHOTOS = ['/img/ayuda-celular.jpg', '/img/ayuda-celular.jpeg', '/img/ayuda-celular.png', '/img/ayuda-celular.webp'];
+  function fillHelpPhoto(figure) {
+    const slot = figure.querySelector('.help-photo-slot');
+    const fallback = () => {
+      const art = document.querySelector('.hero-art svg');
+      slot.innerHTML = '';
+      slot.classList.add('is-illus');
+      if (art) slot.appendChild(art.cloneNode(true));
+    };
+    const tryNext = (i) => {
+      if (i >= HELP_PHOTOS.length) { fallback(); return; }
+      const img = new Image();
+      img.alt = 'Ejemplo: celular apoyado sobre un vaso, con la cámara apuntando al papel';
+      img.onload = () => { slot.innerHTML = ''; slot.appendChild(img); };
+      img.onerror = () => tryNext(i + 1);
+      img.src = HELP_PHOTOS[i];
+    };
+    tryNext(0);
+  }
+
   function openHelpModal() {
-    openModal(`
+    const m = openModal(`
       <img class="modal-icon" src="/icons/icon.svg" alt="">
       <h3>¿Cómo se usa?</h3>
+      <figure class="help-photo">
+        <div class="help-photo-slot"><span class="spinner"></span></div>
+        <figcaption>Así tiene que quedar el celular</figcaption>
+      </figure>
       <ul>
         <li><strong>Apoyá el celular</strong> sobre un vaso, una pila de libros o un trípode, a 20–30 cm del papel.</li>
         <li><strong>Un dedo</strong> mueve la imagen; <strong>dos dedos</strong> la agrandan, achican y giran.</li>
@@ -797,6 +823,7 @@
         <li><strong>Sin cámara:</strong> en «Ajustes» activá «Sin cámara», subí el brillo y calcá apoyando una hoja finita sobre la pantalla.</li>
       </ul>
     `);
+    fillHelpPhoto(m.root.querySelector('.help-photo'));
   }
 
   /* =========================================================

@@ -1,0 +1,10 @@
+FOTO DE EJEMPLO PARA "AYUDA"
+
+Poné acá tu foto de cómo se coloca el celular, con este nombre:
+
+    ayuda-celular.jpg     (también sirve .png o .webp)
+
+Aparece en la ventana de Ayuda (botón "?" arriba a la derecha).
+Si no hay foto, se muestra la ilustración del vaso.
+
+Recomendado: foto horizontal o cuadrada, de unos 1200 px de ancho y menos de 400 KB.

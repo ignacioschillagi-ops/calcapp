@@ -463,3 +463,17 @@ input[type=range]::-moz-range-thumb { width: 22px; height: 22px; border-radius: 
 .modal .actions { display: grid; gap: 10px; margin-top: 16px; }
 .modal .btn { width: 100%; }
 .confirm-thumb { display: block; margin: 0 auto 12px; width: 96px; height: 96px; border-radius: 18px; border: 2.5px solid var(--ink); background: #fff; transform: rotate(-3deg); }
+
+/* foto de ejemplo en Ayuda (tipo polaroid) */
+.help-photo {
+  margin: 4px 4px 18px; padding: 8px 8px 10px;
+  background: #fff; border: var(--line); border-radius: 18px; box-shadow: var(--pop-sm);
+  transform: rotate(-1.5deg);
+}
+.help-photo-slot {
+  display: flex; align-items: center; justify-content: center;
+  min-height: 140px; border-radius: 12px; overflow: hidden; background: var(--aqua-soft);
+}
+.help-photo-slot img { display: block; width: 100%; height: auto; max-height: 320px; object-fit: cover; }
+.help-photo-slot.is-illus svg { width: 100%; height: auto; padding: 10px 8px 0; stroke: var(--ink); stroke-width: 2.5; }
+.help-photo figcaption { text-align: center; font-weight: 600; font-size: .9rem; margin-top: 8px; color: var(--ink); }
