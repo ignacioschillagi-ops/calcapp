@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Calcapp — Calcá cualquier imagen con la cámara</title>
+  <meta name="description" content="Calcá cualquier imagen sobre papel usando la cámara de tu celular. Gratis, sin registro y sin instalar nada.">
+  <meta name="theme-color" content="#111210">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Calcapp">
+  <meta property="og:title" content="Calcapp — Calcá cualquier imagen con la cámara">
+  <meta property="og:description" content="Cargá una imagen, bajale la opacidad y dibujala sobre papel mirando la cámara de tu celular.">
+  <meta property="og:image" content="/icons/icon-512.png">
+  <link rel="icon" type="image/svg+xml" href="/icons/icon.svg">
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+
+<!-- ===== Pantalla de carga ===== -->
+<div id="splash" aria-hidden="true">
+  <img class="splash-icon" src="/icons/icon.svg" alt="">
+  <div class="wordmark splash-wordmark">CALC<span>APP</span></div>
+  <div class="splash-by">
+    <svg viewBox="0 0 1111.08 1111.08" class="yosoyjoe-mark" aria-hidden="true"><path d="M745.86,365.22c-103.19-103.19-150.06-227.68-115.82-295.39,7.24-14.32,6.31-30.16-3.46-39.93l-1.74-1.74c-12.69-12.69-35.15-10.8-50.18,4.22L32.39,574.66c-15.02,15.02-16.91,37.49-4.22,50.18l1.74,1.74c9.77,9.77,25.61,10.7,39.93,3.46,67.71-34.24,192.2,12.63,295.39,115.82,103.19,103.19,150.06,227.68,115.82,295.39-7.24,14.32-6.31,30.16,3.46,39.93l1.74,1.74c12.69,12.69,35.15,10.8,50.18-4.22l542.27-542.27c15.02-15.02,16.91-37.49,4.22-50.18l-1.74-1.74c-9.77-9.77-25.61-10.7-39.93-3.46-67.71,34.24-192.2-12.63-295.39-115.82ZM764.1,764.1c-59.66,59.66-201.39,14.64-316.58-100.54-115.18-115.18-160.2-256.92-100.54-316.58,59.66-59.66,201.39-14.64,316.58,100.54,115.18,115.18,160.2,256.92,100.54,316.58Z"/><ellipse cx="823.01" cy="288.06" rx="43.65" ry="36.87" transform="translate(37.36 666.33) rotate(-45)"/></svg>
+    <span>by <strong>@YoSoyJoe</strong></span>
+  </div>
+</div>
+
+<!-- ===== Inicio ===== -->
+<main id="home" class="screen">
+  <header class="topbar">
+    <button class="icon-btn" id="btn-install" aria-label="Instalar en tu celular" title="Instalar en tu celular">
+      <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    </button>
+    <a class="wordmark" href="#/" aria-label="Calcapp, inicio">CALC<span>APP</span></a>
+    <button class="icon-btn" id="btn-help-top" aria-label="Cómo se usa" title="Cómo se usa">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    </button>
+  </header>
+
+  <section class="hero">
+    <img class="hero-icon" src="/icons/icon.svg" alt="" width="96" height="96">
+    <h1>¡Bienvenido/a a <span class="accent">Calcapp</span>!</h1>
+    <p class="lead">Calcá cualquier imagen sobre papel usando la cámara de tu celular: cargá una foto, bajale la opacidad y dibujá siguiendo las líneas que ves en la pantalla.</p>
+  </section>
+
+  <section class="features">
+    <div class="feature">Cargá una imagen de tu galería o sacale una foto a lo que quieras dibujar.</div>
+    <div class="feature">Ajustá opacidad, tamaño, posición y rotación con los dedos, y bloqueala para que no se mueva.</div>
+    <div class="feature"><strong>Modo boceto:</strong> convierte la foto en líneas para que sea mucho más fácil de calcar.</div>
+  </section>
+
+  <section class="cta">
+    <button class="btn btn-primary" id="btn-pick">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg>
+      Elegir imagen
+    </button>
+    <button class="btn btn-ghost" id="btn-resume" hidden>Seguir con la última imagen</button>
+    <button class="btn btn-ghost" id="btn-sample">Probar con un dibujo de ejemplo</button>
+  </section>
+
+  <section class="howto" id="howto">
+    <h2>¿Cómo se usa?</h2>
+    <ol class="steps">
+      <li><strong>Apoyá el celular</strong> sobre un vaso, una pila de libros o un trípode, a unos 20–30 cm del papel, con la cámara mirando hacia abajo.</li>
+      <li><strong>Cargá tu imagen</strong> y acomodala con los dedos: arrastrá para moverla, pellizcá para agrandarla y girá con dos dedos.</li>
+      <li><strong>Bajale la opacidad</strong> hasta que veas bien el papel y tu lápiz a través de la imagen.</li>
+      <li><strong>Tocá «Bloquear»</strong> para que nada se mueva, y dibujá en el papel mirando la pantalla.</li>
+    </ol>
+    <p class="hint">Tip: el celular tiene que quedar <strong>quieto</strong>. Si se mueve, la imagen se corre respecto del papel.</p>
+  </section>
+
+  <footer class="hint by">By <a href="https://yosoyjoe.vercel.app/" target="_blank" rel="noopener noreferrer">@YoSoyJoe</a></footer>
+
+  <nav class="bottom-nav" aria-label="Navegación">
+    <div class="bottom-nav-inner">
+      <button class="active" data-nav="home">
+        <svg viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Inicio
+      </button>
+      <button data-nav="pick">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg>Imagen
+      </button>
+      <button data-nav="trace">
+        <svg viewBox="0 0 24 24"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>Calcar
+      </button>
+      <button data-nav="help">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Ayuda
+      </button>
+    </div>
+  </nav>
+</main>
+
+<!-- ===== Calcar ===== -->
+<section id="trace" class="screen" hidden>
+  <video id="cam" playsinline muted autoplay></video>
+  <div id="paper" hidden></div>
+  <div id="stage">
+    <canvas id="overlay"></canvas>
+  </div>
+  <div id="grid" hidden></div>
+
+  <div id="cam-error" class="cam-error" hidden>
+    <svg viewBox="0 0 24 24" class="big-icon"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/><line x1="2" y1="2" x2="22" y2="22"/></svg>
+    <h3>No pudimos abrir la cámara</h3>
+    <p id="cam-error-msg">Revisá que le hayas dado permiso al navegador para usar la cámara.</p>
+    <div class="row">
+      <button class="btn btn-primary" id="btn-cam-retry">Reintentar</button>
+      <button class="btn btn-ghost" id="btn-cam-paper">Usar sin cámara</button>
+    </div>
+  </div>
+
+  <div class="trace-top ui">
+    <button class="icon-btn glass" id="btn-back" aria-label="Volver al inicio">
+      <svg viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+    </button>
+    <span class="wordmark small">CALC<span>APP</span></span>
+    <div class="top-right">
+      <button class="icon-btn glass" id="btn-torch" aria-label="Linterna" title="Linterna" hidden>
+        <svg viewBox="0 0 24 24"><path d="M18 6c0 2-2 2-2 4v10a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2V10c0-2-2-2-2-4V2h12z"/><line x1="6" y1="6" x2="18" y2="6"/><line x1="12" y1="12" x2="12" y2="12"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <div id="busy" class="busy" hidden><span class="spinner"></span>Generando boceto…</div>
+
+  <div class="trace-bottom ui">
+    <div class="opacity-row glass">
+      <svg viewBox="0 0 24 24" class="op-icon"><circle cx="12" cy="12" r="9" stroke-dasharray="2 3"/></svg>
+      <input type="range" id="opacity" min="0" max="100" value="50" aria-label="Opacidad de la imagen">
+      <output id="opacity-val">50%</output>
+    </div>
+    <nav class="bottom-nav dock" aria-label="Herramientas">
+      <div class="bottom-nav-inner">
+        <button id="tool-image">
+          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg>Imagen
+        </button>
+        <button id="tool-sketch" aria-pressed="false">
+          <svg viewBox="0 0 24 24"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>Boceto
+        </button>
+        <button id="tool-more">
+          <svg viewBox="0 0 24 24"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg>Ajustes
+        </button>
+        <button id="tool-lock">
+          <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Bloquear
+        </button>
+      </div>
+    </nav>
+  </div>
+
+  <!-- Indicador de bloqueo -->
+  <button id="unlock" class="unlock" hidden aria-label="Mantené apretado para desbloquear">
+    <svg class="ring" viewBox="0 0 48 48"><circle cx="24" cy="24" r="21"/></svg>
+    <svg viewBox="0 0 24 24" class="lock-ico"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    <span>Mantené para desbloquear</span>
+  </button>
+
+  <!-- Hoja de ajustes -->
+  <div id="sheet" class="sheet" hidden>
+    <div class="sheet-card">
+      <div class="sheet-head">
+        <h3>Ajustes</h3>
+        <button class="icon-btn" id="sheet-close" aria-label="Cerrar"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+      </div>
+
+      <div class="sheet-grid">
+        <button class="chip" id="opt-flip" aria-pressed="false">
+          <svg viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v14c0 1.1.9 2 2 2h3M16 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3M12 20v2M12 14v2M12 8v2M12 2v2"/></svg>Espejar
+        </button>
+        <button class="chip" id="opt-grid" aria-pressed="false">
+          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>Grilla
+        </button>
+        <button class="chip" id="opt-center">
+          <svg viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>Centrar
+        </button>
+        <button class="chip" id="opt-rotate" aria-pressed="true">
+          <svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>Rotar
+        </button>
+        <button class="chip" id="opt-paper" aria-pressed="false">
+          <svg viewBox="0 0 24 24"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/><line x1="2" y1="2" x2="22" y2="22"/></svg>Sin cámara
+        </button>
+        <button class="chip" id="opt-switch" hidden>
+          <svg viewBox="0 0 24 24"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><path d="M9 13h6M13 11l2 2-2 2"/></svg>Cambiar cámara
+        </button>
+      </div>
+
+      <div class="sheet-section" id="sketch-settings">
+        <div class="sheet-label">Boceto <span class="muted">(se activa con el botón «Boceto»)</span></div>
+        <label class="slider-row">Intensidad de línea
+          <input type="range" id="sketch-strength" min="0" max="100" value="45">
+        </label>
+        <label class="slider-row">Detalle
+          <input type="range" id="sketch-detail" min="0" max="100" value="50">
+        </label>
+        <div class="swatches" role="radiogroup" aria-label="Color de la línea">
+          <span class="muted">Color:</span>
+          <button class="swatch" data-color="#111111" style="--c:#111111" aria-label="Negro" aria-checked="true" role="radio"></button>
+          <button class="swatch" data-color="#d62828" style="--c:#d62828" aria-label="Rojo" aria-checked="false" role="radio"></button>
+          <button class="swatch" data-color="#1d4ed8" style="--c:#1d4ed8" aria-label="Azul" aria-checked="false" role="radio"></button>
+          <button class="swatch" data-color="#ffffff" style="--c:#ffffff" aria-label="Blanco" aria-checked="false" role="radio"></button>
+        </div>
+        <p class="hint">Tip: usá rojo o azul para distinguir la guía de lo que vas dibujando con el lápiz.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<input type="file" id="file" accept="image/*" hidden>
+<div id="modal-root"></div>
+
+<script src="/app.js"></script>
+</body>
+</html>
