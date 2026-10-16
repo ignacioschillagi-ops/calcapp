@@ -822,9 +822,71 @@
         <li><strong>No aparece la linterna:</strong> en iPhone el navegador no la permite; usá una lámpara de costado.</li>
         <li><strong>Sin cámara:</strong> en «Ajustes» activá «Sin cámara», subí el brillo y calcá apoyando una hoja finita sobre la pantalla.</li>
       </ul>
+      <div class="actions">
+        <button class="btn btn-primary" data-share><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="19" r="2.6"/><path d="M8.3 10.7l7.3-4.2M8.3 13.3l7.3 4.2"/></svg>Compartir con amigos</button>
+      </div>
     `);
     fillHelpPhoto(m.root.querySelector('.help-photo'));
   }
+
+  /* =========================================================
+     Compartir con amigos
+     ========================================================= */
+  const SHARE_TEXT = '¡Mirá Calcapp! Calcá cualquier imagen sobre papel con la cámara del celular. Es gratis:';
+  const shareUrl = () => location.origin + '/';
+
+  async function shareApp() {
+    const url = shareUrl();
+    const data = { title: 'Calcapp', text: SHARE_TEXT, url };
+    // Menú nativo del celular (WhatsApp, Instagram, mensajes…)
+    if (navigator.share && (!navigator.canShare || navigator.canShare(data))) {
+      try { await navigator.share(data); return; }
+      catch (e) { if (e && e.name === 'AbortError') return; /* si falla, mostramos las opciones */ }
+    }
+    openShareModal(url);
+  }
+
+  async function copyText(text) {
+    try { await navigator.clipboard.writeText(text); return true; }
+    catch {
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = text; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0';
+        document.body.appendChild(ta); ta.select(); const ok = document.execCommand('copy'); ta.remove(); return ok;
+      } catch { return false; }
+    }
+  }
+
+  function openShareModal(url) {
+    const msg = encodeURIComponent(SHARE_TEXT + ' ' + url);
+    const m = openModal(`
+      <img class="modal-icon" src="/icons/icon.svg" alt="">
+      <h3>Compartí Calcapp</h3>
+      <p>Mandásela a quien quieras para que también pueda calcar sus dibujos.</p>
+      <div class="actions">
+        <a class="btn btn-wa" href="https://wa.me/?text=${msg}" target="_blank" rel="noopener noreferrer">
+          <svg viewBox="0 0 24 24"><path d="M21 11.5a8.4 8.4 0 0 1-12.4 7.4L3 21l2.1-5.4A8.4 8.4 0 1 1 21 11.5z"/></svg>WhatsApp
+        </a>
+        <a class="btn btn-tg" href="https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(SHARE_TEXT)}" target="_blank" rel="noopener noreferrer">
+          <svg viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4z"/><path d="M22 2 11 13"/></svg>Telegram
+        </a>
+        <button class="btn btn-ghost" data-copy>
+          <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><span>Copiar link</span>
+        </button>
+      </div>
+      <div class="share-link">${url}</div>
+    `, { center: true });
+    const b = m.root.querySelector('[data-copy]');
+    b.addEventListener('click', async () => {
+      const ok = await copyText(url);
+      b.querySelector('span').textContent = ok ? '¡Link copiado!' : 'No se pudo copiar';
+      setTimeout(() => { const sp = b.querySelector('span'); if (sp) sp.textContent = 'Copiar link'; }, 2000);
+    });
+  }
+
+  document.addEventListener('click', (e) => {
+    if (e.target.closest('[data-share]')) shareApp();
+  });
 
   /* =========================================================
      Navegación

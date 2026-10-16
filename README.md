@@ -17,6 +17,7 @@ Calcá cualquier imagen sobre papel usando la cámara del celular. Cargás una f
 - **Sin cámara:** fondo blanco para calcar apoyando una hoja finita sobre la pantalla.
 - **Nuevo dibujo:** si ya estás calcando algo, primero pregunta. La imagen actual solo se reemplaza cuando elegís otra.
 - **Tu dibujo queda guardado:** si cerrás la app, al reabrirla volvés directo a Calcar con la misma imagen, posición, opacidad y modo.
+- **Compartir con amigos:** botón en Ayuda y en el inicio. Usa el menú de compartir del celular; si no existe, ofrece WhatsApp, Telegram o copiar el link.
 - Se puede instalar como app (PWA) y funciona sin internet. El botón «Instalar» solo aparece en la web: en la app instalada no se ve.
 
 No usa servidor, base de datos ni API keys: todo corre en el teléfono y las imágenes nunca salen del dispositivo.
@@ -71,4 +72,4 @@ En la compu la rueda del mouse hace zoom y Shift + rueda rota la imagen.
 
 ## Actualizaciones
 
-Cuando subas cambios grandes, cambiá `VERSION` en `sw.js` (por ejemplo `calcapp-v3`). Así los celulares que la tienen instalada borran la versión vieja guardada.
+Cuando subas cambios grandes, cambiá `VERSION` en `sw.js` (por ejemplo `calcapp-v4`). Así los celulares que la tienen instalada borran la versión vieja guardada.

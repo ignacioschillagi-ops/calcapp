@@ -477,3 +477,20 @@ input[type=range]::-moz-range-thumb { width: 22px; height: 22px; border-radius: 
 .help-photo-slot img { display: block; width: 100%; height: auto; max-height: 320px; object-fit: cover; }
 .help-photo-slot.is-illus svg { width: 100%; height: auto; padding: 10px 8px 0; stroke: var(--ink); stroke-width: 2.5; }
 .help-photo figcaption { text-align: center; font-weight: 600; font-size: .9rem; margin-top: 8px; color: var(--ink); }
+
+/* compartir */
+.share-card {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 14px 14px 14px 16px; margin: 22px 0 0; background: var(--coral-soft);
+}
+.share-text strong { display: block; font-size: 1.08rem; }
+.share-text span { color: var(--ink-soft); font-size: .9rem; line-height: 1.3; display: block; }
+.share-card .btn { flex-shrink: 0; }
+.btn-wa { background: #A6EBC0; color: var(--ink); }
+.btn-tg { background: var(--sky); color: var(--ink); }
+a.btn { text-decoration: none; }
+.share-link {
+  margin-top: 14px; padding: 10px 12px; border-radius: 12px;
+  border: 2px dashed var(--ink); background: var(--bg);
+  font-size: .9rem; font-weight: 500; word-break: break-all; user-select: all; -webkit-user-select: all;
+}
