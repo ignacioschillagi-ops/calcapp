@@ -74,4 +74,4 @@ En la compu la rueda del mouse hace zoom y Shift + rueda rota la imagen.
 
 ## Actualizaciones
 
-Cuando subas cambios grandes, cambiá `VERSION` en `sw.js` (por ejemplo `calcapp-v5`). Así los celulares que la tienen instalada borran la versión vieja guardada.
+Cuando subas cambios grandes, cambiá `VERSION` en `sw.js` (por ejemplo `calcapp-v6`). Así los celulares que la tienen instalada borran la versión vieja guardada.

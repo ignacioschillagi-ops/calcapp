@@ -781,6 +781,46 @@
     const b = typeof sel === 'string' ? $(sel) : sel;
     if (b) b.setAttribute('aria-pressed', String(!!on));
   }
+  /* Barras deslizantes: el arrastre lo manejamos nosotros (igual en iPhone y Android).
+     Así el punto se puede arrastrar aunque la pantalla de Calcar bloquee los gestos del navegador. */
+  const THUMB = 26; // ancho del círculo de la barra (ver styles.css)
+  function enhanceRange(input) {
+    if (input.closest('.range-hit')) return;
+    const hit = document.createElement('span');
+    hit.className = 'range-hit';
+    input.parentNode.insertBefore(hit, input);
+    hit.appendChild(input);
+    const setFromX = (x) => {
+      const r = input.getBoundingClientRect();
+      const min = +input.min || 0, max = +input.max || 100, step = +input.step || 1;
+      const f = Math.min(1, Math.max(0, (x - r.left - THUMB / 2) / Math.max(1, r.width - THUMB)));
+      const v = Math.round((min + f * (max - min)) / step) * step;
+      if (String(v) !== input.value) {
+        input.value = v;
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+    };
+    let active = null;
+    hit.addEventListener('pointerdown', (e) => {
+      if (e.button > 0) return;
+      e.preventDefault();
+      active = e.pointerId;
+      try { hit.setPointerCapture(e.pointerId); } catch { /* noop */ }
+      hit.classList.add('dragging');
+      setFromX(e.clientX);
+    });
+    hit.addEventListener('pointermove', (e) => { if (e.pointerId === active) setFromX(e.clientX); });
+    const end = (e) => {
+      if (e.pointerId !== active) return;
+      active = null;
+      hit.classList.remove('dragging');
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+    };
+    hit.addEventListener('pointerup', end);
+    hit.addEventListener('pointercancel', end);
+  }
+  $$('input[type=range]').forEach(enhanceRange);
+
   function paintRange(input) {
     const min = +input.min || 0, max = +input.max || 100;
     input.style.setProperty('--p', ((input.value - min) / (max - min)) * 100 + '%');
