@@ -11,9 +11,11 @@ Calcá cualquier imagen sobre papel usando la cámara del celular. Cargás una f
 - Gestos: un dedo mueve la imagen; dos dedos la agrandan, achican y giran (con imán a 0°/90°).
 - **Modo boceto:** convierte la foto en líneas tipo lápiz. Se puede elegir intensidad, detalle y color (negro, rojo, azul o blanco).
 - **Bloquear:** esconde los controles y congela la imagen. Para desbloquear hay que mantener apretado el candado.
+- **Foco fijo:** en Android, «Bloquear» también congela el foco para que la cámara no enfoque la mano (o se activa en Ajustes → «Foco fijo»). Safari en iPhone no permite controlar el foco.
+- **Gran angular (0.5×):** si el celular lo tiene, aparece un botón «1×/0.5×» arriba. En iPhone se usa cada lente por separado, así no salta solo de lente al acercar la mano. En Ajustes, «Cambiar lente» recorre todas las cámaras traseras.
 - La pantalla no se apaga mientras calcás.
 - Linterna, solo en Android/Chrome. Safari en iPhone no la permite.
-- Grilla, espejar, centrar y cambiar de cámara.
+- Grilla, espejar, centrar y cambiar de lente.
 - **Sin cámara:** fondo blanco para calcar apoyando una hoja finita sobre la pantalla.
 - **Nuevo dibujo:** si ya estás calcando algo, primero pregunta. La imagen actual solo se reemplaza cuando elegís otra.
 - **Tu dibujo queda guardado:** si cerrás la app, al reabrirla volvés directo a Calcar con la misma imagen, posición, opacidad y modo.
@@ -72,4 +74,4 @@ En la compu la rueda del mouse hace zoom y Shift + rueda rota la imagen.
 
 ## Actualizaciones
 
-Cuando subas cambios grandes, cambiá `VERSION` en `sw.js` (por ejemplo `calcapp-v4`). Así los celulares que la tienen instalada borran la versión vieja guardada.
+Cuando subas cambios grandes, cambiá `VERSION` en `sw.js` (por ejemplo `calcapp-v5`). Así los celulares que la tienen instalada borran la versión vieja guardada.

@@ -195,6 +195,7 @@
     </button>
     <span class="brand-chip"><img src="/icons/icon.svg" alt="" width="22" height="22"><span class="wordmark small">Calc<span>app</span></span></span>
     <div class="top-right">
+      <button class="round-btn lens-btn" id="btn-lens" aria-label="Cambiar lente" hidden>1×</button>
       <button class="round-btn" id="btn-torch" aria-label="Linterna" title="Linterna" hidden>
         <svg viewBox="0 0 24 24"><path d="M18 6c0 2-2 2-2 4v10a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2V10c0-2-2-2-2-4V2h12z"/><line x1="6" y1="6" x2="18" y2="6"/><line x1="12" y1="12" x2="12" y2="12"/></svg>
       </button>
@@ -263,8 +264,11 @@
         <button class="chip" id="opt-paper" aria-pressed="false">
           <svg viewBox="0 0 24 24"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/><line x1="2" y1="2" x2="22" y2="22"/></svg>Sin cámara
         </button>
+        <button class="chip" id="opt-focus" aria-pressed="false" hidden>
+          <svg viewBox="0 0 24 24"><path d="M3 8V5a2 2 0 0 1 2-2h3M16 3h3a2 2 0 0 1 2 2v3M21 16v3a2 2 0 0 1-2 2h-3M8 21H5a2 2 0 0 1-2-2v-3"/><circle cx="12" cy="12" r="3.5"/></svg>Foco fijo
+        </button>
         <button class="chip" id="opt-switch" hidden>
-          <svg viewBox="0 0 24 24"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><path d="M9 13h6M13 11l2 2-2 2"/></svg>Otra cámara
+          <svg viewBox="0 0 24 24"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/><path d="M18.5 10.5h.01"/></svg>Cambiar lente
         </button>
       </div>
 

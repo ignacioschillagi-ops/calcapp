@@ -1,6 +1,6 @@
 /* Calcapp service worker: funciona offline y se actualiza sola.
    Al subir cambios importantes, subí el número de VERSION. */
-const VERSION = 'calcapp-v3';
+const VERSION = 'calcapp-v4';
 const ASSETS = [
   '/', '/index.html', '/styles.css', '/app.js', '/manifest.webmanifest',
   '/icons/icon.svg', '/icons/icon-192.png', '/icons/icon-512.png',

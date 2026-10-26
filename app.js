@@ -66,8 +66,10 @@
     color: prefs.get('color', '#111111'),
     t: prefs.get('t', { x: 0, y: 0, s: 1, r: 0 }),
     locked: false,
-    stream: null, track: null, torch: false,
-    facing: 'environment',
+    stream: null, track: null, torch: false, torchTouched: false,
+    camId: prefs.get('camId', null), zoomUltra: prefs.get('zoomUltra', false), triedPlain: false,
+    cam: { ultra: null, plain: null, back: [] },
+    focusManual: prefs.get('focusManual', false), focusLocked: false, focusTouched: false, focusDist: null,
     wakeLock: null,
     cameFromHome: false,
     camToken: 0,
@@ -81,7 +83,7 @@
     camError: $('#cam-error'), camErrorMsg: $('#cam-error-msg'),
     opacity: $('#opacity'), opacityVal: $('#opacity-val'),
     toast: $('#toast'), busy: $('#busy'), sheet: $('#sheet'), unlock: $('#unlock'),
-    torch: $('#btn-torch'), continueCard: $('#continue'), thumb: $('#thumb'), modalRoot: $('#modal-root'),
+    torch: $('#btn-torch'), lens: $('#btn-lens'), focusChip: $('#opt-focus'), continueCard: $('#continue'), thumb: $('#thumb'), modalRoot: $('#modal-root'),
     themeMeta: document.querySelector('meta[name="theme-color"]'),
   };
   const octx = el.overlay.getContext('2d');
@@ -451,20 +453,46 @@
   el.trace.addEventListener('touchmove', (e) => { if (!e.target.closest('.sheet-card')) e.preventDefault(); }, { passive: false });
 
   /* =========================================================
-     Cámara
+     Cámara: lentes (1× / 0.5×), foco fijo y linterna
      ========================================================= */
+  const FRONT_RE = /front|frontal|delant|user|selfie|facetime/i;
+  const ULTRA_RE = /ultra/i;                                  // "Back Ultra Wide Camera", "Cámara ultra gran angular posterior"
+  const COMBINED_RE = /dual|doble|duale|triple|tele|ultra/i;  // lentes combinados o tele (iPhone)
+
+  function camCaps() {
+    try { return (S.track && S.track.getCapabilities && S.track.getCapabilities()) || {}; } catch { return {}; }
+  }
+  function camSettings() {
+    try { return (S.track && S.track.getSettings && S.track.getSettings()) || {}; } catch { return {}; }
+  }
+  function setCamId(id) { S.camId = id || null; prefs.set('camId', S.camId); }
+
   function stopCamera() {
     S.camToken++;
     if (S.stream) S.stream.getTracks().forEach((t) => t.stop());
     S.stream = null; S.track = null; S.torch = false;
     el.video.srcObject = null;
     el.torch.hidden = true;
+    el.lens.hidden = true;
     updateTorchBtn();
   }
 
   function showCamError(msg) {
     el.camErrorMsg.textContent = msg;
     el.camError.hidden = false;
+  }
+
+  async function openStream() {
+    const base = { width: { ideal: 1920 }, height: { ideal: 1080 } };
+    const env = { audio: false, video: { ...base, facingMode: { ideal: 'environment' } } };
+    if (!S.camId) return navigator.mediaDevices.getUserMedia(env);
+    try {
+      return await navigator.mediaDevices.getUserMedia({ audio: false, video: { ...base, deviceId: { exact: S.camId } } });
+    } catch (err) {
+      if (err && (err.name === 'NotAllowedError' || err.name === 'SecurityError')) throw err;
+      setCamId(null); // ese lente ya no está disponible: volvemos a la cámara trasera normal
+      return navigator.mediaDevices.getUserMedia(env);
+    }
   }
 
   async function startCamera() {
@@ -482,26 +510,9 @@
       return;
     }
     const token = ++S.camToken;
+    let stream;
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: false,
-        video: { facingMode: { ideal: S.facing }, width: { ideal: 1920 }, height: { ideal: 1080 } },
-      });
-      if (token !== S.camToken || route() !== 'trace' || S.paper) {
-        stream.getTracks().forEach((t) => t.stop());
-        return;
-      }
-      S.stream = stream;
-      S.track = stream.getVideoTracks()[0];
-      el.video.srcObject = stream;
-      el.video.classList.toggle('mirror', S.facing === 'user');
-      try { await el.video.play(); } catch { /* iOS a veces necesita un toque; autoplay+muted suele bastar */ }
-      S.track.addEventListener('ended', () => {
-        if (route() === 'trace' && !document.hidden && !S.paper) startCamera();
-      });
-      setupTorch();
-      setTimeout(setupTorch, 800); // algunos Android reportan la linterna recién cuando arranca el video
-      checkCameras();
+      stream = await openStream();
     } catch (err) {
       if (token !== S.camToken) return;
       const name = err && err.name;
@@ -514,14 +525,154 @@
         msg = 'La cámara está ocupada por otra app. Cerrala y tocá Reintentar.';
       }
       showCamError(msg);
+      return;
     }
+    if (token !== S.camToken || route() !== 'trace' || S.paper) {
+      stream.getTracks().forEach((t) => t.stop());
+      return;
+    }
+    S.stream = stream;
+    S.track = stream.getVideoTracks()[0];
+    el.video.srcObject = stream;
+    try { await el.video.play(); } catch { /* iOS a veces necesita un toque; autoplay+muted suele bastar */ }
+    S.track.addEventListener('ended', () => {
+      if (route() === 'trace' && !document.hidden && !S.paper) startCamera();
+    });
+
+    await detectLenses();
+    if (token !== S.camToken) return;
+
+    // iPhone: usar el lente 1× "puro" para que no salte solo a otro lente cuando acercás la mano
+    if (!S.camId && !S.triedPlain && S.cam.plain && camSettings().deviceId !== S.cam.plain) {
+      S.triedPlain = true;
+      setCamId(S.cam.plain);
+      startCamera();
+      return;
+    }
+
+    await applyCam();
+    setupTorch();
+    setTimeout(setupTorch, 800); // algunos Android reportan la linterna recién cuando arranca el video
+    updateLensUI();
+
+    // Foco fijo: si estaba activo, lo volvemos a aplicar (o lo medimos de nuevo si cambió el lente)
+    if ((S.locked || S.focusManual) && canLockFocus() && !(S.focusLocked && typeof S.focusDist === 'number')) {
+      setTimeout(() => { if (token === S.camToken && (S.locked || S.focusManual)) setFocusLock(true); }, 1500);
+    }
+  }
+
+  async function detectLenses() {
+    S.cam = { ultra: null, plain: null, back: [] };
+    let devs = [];
+    try { devs = (await navigator.mediaDevices.enumerateDevices()).filter((d) => d.kind === 'videoinput'); } catch { /* noop */ }
+    const back = devs.filter((d) => d.deviceId && !FRONT_RE.test(d.label || ''));
+    S.cam.back = back.map((d) => d.deviceId);
+    const ultraDev = back.find((d) => ULTRA_RE.test(d.label || ''));
+    // el lente 1× solo lo distinguimos cuando el celular nombra sus lentes (iPhone)
+    const plainDev = ultraDev ? back.find((d) => d.label && !COMBINED_RE.test(d.label)) : null;
+    S.cam.plain = plainDev ? plainDev.deviceId : null;
+    const caps = camCaps();
+    if (caps.zoom && caps.zoom.min < 0.95) {
+      const z = Math.round(Math.max(caps.zoom.min, 0.5) * 10) / 10;
+      S.cam.ultra = { type: 'zoom', zoom: z, label: z + '×' };
+    } else if (ultraDev) {
+      S.cam.ultra = { type: 'device', id: ultraDev.deviceId, label: '0.5×' };
+    }
+  }
+
+  function isUltraNow() {
+    const u = S.cam.ultra;
+    if (!u) return false;
+    return u.type === 'zoom' ? !!S.zoomUltra : S.camId === u.id;
+  }
+
+  function updateLensUI() {
+    const u = S.cam.ultra, ultra = isUltraNow();
+    el.lens.hidden = !u || !S.track;
+    el.lens.textContent = ultra ? u.label : '1×';
+    el.lens.classList.toggle('on', ultra);
+    el.lens.setAttribute('aria-label', ultra ? 'Lente gran angular. Tocá para volver a 1×' : 'Lente 1×. Tocá para ver más (gran angular)');
+    $('#opt-switch').hidden = S.cam.back.length < 2;
+    el.focusChip.hidden = !canLockFocus();
+    setPressed(el.focusChip, S.focusManual);
+  }
+
+  async function toggleLens() {
+    const u = S.cam.ultra;
+    if (!u) return;
+    const toUltra = !isUltraNow();
+    S.focusDist = null; // cada lente enfoca distinto
+    if (u.type === 'zoom') {
+      S.zoomUltra = toUltra; prefs.set('zoomUltra', toUltra);
+      await applyCam();
+      updateLensUI();
+      if (S.focusLocked) setTimeout(() => setFocusLock(true), 1200);
+    } else {
+      setCamId(toUltra ? u.id : (S.cam.plain || null));
+      await startCamera();
+    }
+    toast(toUltra ? 'Gran angular: ves más papel. Reacomodá la imagen si hace falta' : 'Lente 1×');
+  }
+
+  /* Aplica linterna, zoom y foco juntos (cada llamada reemplaza a la anterior) */
+  async function applyCam() {
+    if (!S.track) return false;
+    const c = camCaps(), adv = {};
+    if (c.torch && S.torchTouched) adv.torch = !!S.torch;
+    const u = S.cam.ultra;
+    if (c.zoom && u && u.type === 'zoom') {
+      adv.zoom = Math.min(c.zoom.max, Math.max(c.zoom.min, S.zoomUltra ? u.zoom : 1));
+    }
+    const m = Array.isArray(c.focusMode) ? c.focusMode : null;
+    if (m && S.focusTouched) {
+      if (S.focusLocked && m.includes('manual') && c.focusDistance && typeof S.focusDist === 'number') {
+        adv.focusMode = 'manual';
+        adv.focusDistance = Math.min(c.focusDistance.max, Math.max(c.focusDistance.min, S.focusDist));
+      } else if (S.focusLocked && m.includes('single-shot')) {
+        adv.focusMode = 'single-shot';
+      } else if (m.includes('continuous')) {
+        adv.focusMode = 'continuous';
+      }
+    }
+    if (!Object.keys(adv).length) return true;
+    try {
+      await S.track.applyConstraints({ advanced: [adv] });
+      return true;
+    } catch {
+      // algunos celulares rechazan la combinación: probamos por separado
+      let ok = true;
+      for (const k of ['focusMode', 'zoom', 'torch']) {
+        if (!(k in adv)) continue;
+        const one = { [k]: adv[k] };
+        if (k === 'focusMode' && adv.focusMode === 'manual') one.focusDistance = adv.focusDistance;
+        try { await S.track.applyConstraints({ advanced: [one] }); } catch { ok = false; }
+      }
+      return ok;
+    }
+  }
+
+  /* ---------- Foco fijo (Chrome en Android; Safari en iPhone no lo permite) ---------- */
+  function canLockFocus() {
+    const c = camCaps(), m = c.focusMode;
+    if (!Array.isArray(m)) return false;
+    return (m.includes('manual') && !!c.focusDistance) || m.includes('single-shot');
+  }
+  async function setFocusLock(on) {
+    if (!S.track || !canLockFocus()) { S.focusLocked = false; return false; }
+    if (on) {
+      const d = camSettings().focusDistance;
+      if (typeof d === 'number' && d > 0) S.focusDist = d; // congelamos donde está enfocando ahora (el papel)
+    }
+    S.focusTouched = true;
+    S.focusLocked = on;
+    const ok = await applyCam();
+    if (!ok) S.focusLocked = false;
+    return ok && on;
   }
 
   function setupTorch() {
     if (!S.track) return;
-    let caps = {};
-    try { caps = (S.track.getCapabilities && S.track.getCapabilities()) || {}; } catch { /* noop */ }
-    el.torch.hidden = !caps.torch;
+    el.torch.hidden = !camCaps().torch;
     updateTorchBtn();
   }
   function updateTorchBtn() {
@@ -530,18 +681,10 @@
   }
   async function toggleTorch() {
     if (!S.track) return;
-    try {
-      await S.track.applyConstraints({ advanced: [{ torch: !S.torch }] });
-      S.torch = !S.torch;
-    } catch { toast('No se pudo prender la linterna'); }
+    S.torch = !S.torch;
+    S.torchTouched = true;
+    if (!(await applyCam())) { S.torch = !S.torch; toast('No se pudo prender la linterna'); }
     updateTorchBtn();
-  }
-
-  async function checkCameras() {
-    try {
-      const devs = await navigator.mediaDevices.enumerateDevices();
-      $('#opt-switch').hidden = devs.filter((d) => d.kind === 'videoinput').length < 2;
-    } catch { /* noop */ }
   }
 
   function applyPaper() {
@@ -590,7 +733,11 @@
     document.body.classList.add('locked');
     el.unlock.hidden = false;
     wakeUnlockPill();
-    toast('Imagen bloqueada. ¡A dibujar!');
+    if (canLockFocus()) {
+      setFocusLock(true).then((ok) => toast(ok ? 'Imagen y foco bloqueados. ¡A dibujar!' : 'Imagen bloqueada. ¡A dibujar!'));
+    } else {
+      toast('Imagen bloqueada. ¡A dibujar!');
+    }
   }
   let swallowClicksUntil = 0;
   // el dedo que desbloquea no tiene que "tocar" el botón que queda debajo al soltarlo
@@ -607,7 +754,9 @@
 
   function unlock(byFinger = false) {
     if (S.locked && byFinger) swallowClicksUntil = performance.now() + 10000;
+    const wasLocked = S.locked;
     S.locked = false;
+    if (wasLocked && !S.focusManual && S.focusLocked) setFocusLock(false);
     document.body.classList.remove('locked');
     el.unlock.hidden = true;
     el.unlock.classList.remove('holding');
@@ -699,9 +848,30 @@
     S.paper = !S.paper; prefs.set('paper', S.paper); syncControls(); startCamera();
     if (S.paper) paperTip();
   });
-  $('#opt-switch').addEventListener('click', () => {
-    S.facing = S.facing === 'environment' ? 'user' : 'environment';
-    startCamera();
+  // Recorre todas las cámaras traseras (sirve en Android, donde los lentes no tienen nombre)
+  $('#opt-switch').addEventListener('click', async () => {
+    const ids = S.cam.back;
+    if (ids.length < 2) return;
+    const cur = camSettings().deviceId || S.camId;
+    const next = ids[(ids.indexOf(cur) + 1) % ids.length];
+    setCamId(next);
+    S.focusDist = null;
+    await startCamera();
+    toast(`Lente ${ids.indexOf(next) + 1} de ${ids.length}. Reacomodá la imagen si hace falta`);
+  });
+  el.lens.addEventListener('click', toggleLens);
+  el.focusChip.addEventListener('click', async () => {
+    S.focusManual = !S.focusManual;
+    prefs.set('focusManual', S.focusManual);
+    setPressed(el.focusChip, S.focusManual);
+    if (S.focusManual) {
+      const ok = await setFocusLock(true);
+      toast(ok ? 'Foco fijo: la cámara ya no reenfoca en tu mano' : 'Este celular no deja fijar el foco');
+      if (!ok) { S.focusManual = false; prefs.set('focusManual', false); setPressed(el.focusChip, false); }
+    } else if (!S.locked) {
+      await setFocusLock(false);
+      toast('Foco automático');
+    }
   });
 
   let sketchDebounce = 0;
@@ -813,12 +983,15 @@
         <li><strong>Opacidad:</strong> bajala hasta ver bien el papel y la punta del lápiz.</li>
         <li><strong>Boceto:</strong> convierte la foto en líneas. En «Ajustes» cambiás intensidad, detalle y color.</li>
         <li><strong>Bloquear:</strong> esconde los controles y congela la imagen. Para desbloquear, mantené apretado el candado.</li>
+        <li><strong>Foco fijo:</strong> en Android, «Bloquear» también fija el foco para que la cámara no enfoque tu mano (o activalo en Ajustes → «Foco fijo»).</li>
+        <li><strong>Gran angular (0.5×):</strong> si tu celular lo tiene, aparece el botón «1×» arriba. Ves más papel; en los bordes la imagen se curva un poquito, así que conviene dibujar en el centro.</li>
         <li><strong>Tu dibujo queda guardado:</strong> si cerrás la app, al volver a abrirla seguís donde estabas.</li>
       </ul>
       <h3>Si algo no anda</h3>
       <ul>
         <li><strong>No se ve la cámara:</strong> revisá el permiso de cámara del navegador y tocá «Reintentar».</li>
         <li><strong>La imagen se corre del papel:</strong> el celular se movió. Apoyalo firme y no toques la mesa.</li>
+        <li><strong>Se desenfoca con la mano (iPhone):</strong> Safari no deja fijar el foco. Probá el lente 0.5×: mantiene nítido el papel aunque la mano esté cerca. Si se ve borroso, alejá un poco el celular.</li>
         <li><strong>No aparece la linterna:</strong> en iPhone el navegador no la permite; usá una lámpara de costado.</li>
         <li><strong>Sin cámara:</strong> en «Ajustes» activá «Sin cámara», subí el brillo y calcá apoyando una hoja finita sobre la pantalla.</li>
       </ul>
